@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 import types
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -58,6 +60,7 @@ class PipelineStartupBackendTests(unittest.TestCase):
         def _create_demo(init_params=None, language="en"):
             captured["init_params"] = init_params
             captured["language"] = language
+            captured["checkpoints_dir"] = os.environ.get("ACESTEP_CHECKPOINTS_DIR")
             return demo
 
         with patch.object(sys, "argv", argv), patch.dict(os.environ, env or {}, clear=True), patch(
@@ -91,6 +94,21 @@ class PipelineStartupBackendTests(unittest.TestCase):
             acestep_v15_pipeline.main()
 
         return llm_handler, captured
+
+    def test_main_uses_flatpak_xdg_runtime_directories(self) -> None:
+        """A Flatpak launch should keep mutable data outside the application tree."""
+        with tempfile.TemporaryDirectory() as data_home:
+            _, captured = self._run_main(
+                ["acestep"],
+                env={
+                    "FLATPAK_ID": "ai.acestep.ACEStep",
+                    "XDG_DATA_HOME": data_home,
+                },
+            )
+
+        expected_root = Path(data_home) / "ace-step"
+        self.assertEqual(str(expected_root / "checkpoints"), captured["checkpoints_dir"])
+        self.assertEqual(str(expected_root / "outputs"), captured["init_params"]["output_dir"])
 
     def test_main_forces_pt_backend_for_explicit_vllm_argument(self) -> None:
         """Legacy CUDA startup should override an explicit CLI vLLM request."""

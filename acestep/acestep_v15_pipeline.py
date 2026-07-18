@@ -60,6 +60,7 @@ try:
         is_mps_platform,
     )
     from .model_downloader import ensure_lm_model
+    from .runtime_paths import ensure_directory, get_checkpoints_dir, get_output_dir
 except ImportError:
     # When executed as a script: `python acestep/acestep_v15_pipeline.py`
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -82,6 +83,7 @@ except ImportError:
         is_mps_platform,
     )
     from acestep.model_downloader import ensure_lm_model
+    from acestep.runtime_paths import ensure_directory, get_checkpoints_dir, get_output_dir
 
 
 def create_demo(init_params=None, language="en"):
@@ -196,13 +198,8 @@ def main():
     else:
         print("No GPU detected, running on CPU")
 
-    # Define local outputs directory
+    # Keep the source/application root separate from mutable runtime directories.
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    output_dir = os.path.join(project_root, "gradio_outputs")
-    # Normalize path to use forward slashes for Gradio 6 compatibility on Windows
-    output_dir = output_dir.replace("\\", "/")
-    os.makedirs(output_dir, exist_ok=True)
-    print(f"Output directory: {output_dir}")
 
     # Initialize i18n with default language (en)
     get_i18n()
@@ -247,6 +244,16 @@ def main():
         action="append",
         default=[],
         help="Additional allowed file paths for Gradio (repeatable).",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="Directory for generated audio (overrides ACESTEP_OUTPUT_DIR)",
+    )
+    parser.add_argument(
+        "--checkpoints-dir",
+        default=None,
+        help="Directory for downloaded models (overrides ACESTEP_CHECKPOINTS_DIR)",
     )
 
     # Service mode argument
@@ -389,6 +396,16 @@ def main():
     )
 
     args = parser.parse_args()
+
+    output_dir = str(ensure_directory(get_output_dir(args.output_dir, project_root)))
+    # Gradio 6 expects forward slashes in allowed paths on Windows.
+    output_dir = output_dir.replace("\\", "/")
+    checkpoints_dir = str(
+        ensure_directory(get_checkpoints_dir(args.checkpoints_dir, project_root))
+    )
+    os.environ["ACESTEP_CHECKPOINTS_DIR"] = checkpoints_dir
+    print(f"Output directory: {output_dir}")
+    print(f"Checkpoint directory: {checkpoints_dir}")
 
     # Enable API requires init_service
     if args.enable_api:
@@ -543,7 +560,7 @@ def main():
                         args.init_llm = False
 
                 if args.init_llm and args.lm_model_path:
-                    checkpoint_dir = os.path.join(project_root, "checkpoints")
+                    checkpoint_dir = checkpoints_dir
 
                     # Ensure LM model is downloaded before initialization
                     prefer_source = None
