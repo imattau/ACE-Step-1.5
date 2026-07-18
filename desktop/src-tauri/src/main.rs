@@ -3,6 +3,7 @@
 mod backend;
 #[cfg(test)]
 mod backend_test;
+mod downloads;
 mod models;
 mod paths;
 mod readiness;
@@ -93,6 +94,15 @@ fn main() {
             quit_app,
         ])
         .setup(|app| {
+            let window_config = app
+                .config()
+                .app
+                .windows
+                .first()
+                .ok_or("missing main window configuration")?;
+            tauri::WebviewWindowBuilder::from_config(app, window_config)?
+                .on_download(|_, event| downloads::handle_download(event))
+                .build()?;
             let state = app.state::<DesktopState>();
             let lm_model = state
                 .lm_model

@@ -16,6 +16,7 @@
     "windows": [
       {
         "label": "main",
+        "create": false,
         "title": "ACE-Step",
         "width": 1280,
         "height": 860,

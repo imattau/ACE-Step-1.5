@@ -6,6 +6,7 @@ version = 4
 name = "ace-step-desktop"
 version = "0.1.0"
 dependencies = [
+ "gtk",
  "serde",
  "serde_json",
  "tauri",
