@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>ai.acestep.ACEStep</id>
+  <name>ACE-Step</name>
+  <summary>Generate and edit music locally</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>
+      ACE-Step generates and edits music locally through a focused desktop interface.
+      Models and generated audio remain in the application's private data directories.
+    </p>
+  </description>
+  <developer id="ai.acestep">
+    <name>ACE-Step contributors</name>
+  </developer>
+  <url type="homepage">https://github.com/ace-step/ACE-Step-1.5</url>
+  <launchable type="desktop-id">ai.acestep.ACEStep.desktop</launchable>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="0.1.0" date="2026-07-19" />
+  </releases>
+</component>

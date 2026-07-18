@@ -1,0 +1,87 @@
+app-id: ai.acestep.ACEStep
+runtime: org.gnome.Platform
+runtime-version: "49"
+sdk: org.gnome.Sdk
+command: ace-step
+
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node22
+  - org.freedesktop.Sdk.Extension.rust-stable
+
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=dri
+
+build-options:
+  append-path: /usr/lib/sdk/node22/bin:/usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/ace-step-desktop/cargo
+    LD_LIBRARY_PATH: /app/lib/ace-step-python/lib
+    npm_config_cache: /run/build/ace-step-desktop/flatpak-node/npm-cache
+    npm_config_offline: "true"
+
+modules:
+  - name: python-3.12
+    buildsystem: autotools
+    config-opts:
+      - --prefix=/app/lib/ace-step-python
+      - --enable-shared
+      - --with-ensurepip=install
+    cleanup:
+      - /lib/ace-step-python/lib/pkgconfig
+      - /lib/ace-step-python/share
+    sources:
+      - type: archive
+        url: https://www.python.org/ftp/python/3.12.13/Python-3.12.13.tar.xz
+        sha256: c08bc65a81971c1dd5783182826503369466c7e67374d1646519adf05207b684
+
+  - python3-ace-step-dependencies.json
+
+  - name: ace-step
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/ace-step /app/bin
+      - cp -a acestep /app/lib/ace-step/acestep
+      - install -Dm755 desktop/flatpak/build-aux/acestep-desktop /app/bin/acestep-desktop
+    sources:
+      - &repository-source
+        type: dir
+        path: ../..
+        skip:
+          - .git
+          - .venv
+          - .flatpak-builder
+          - build-dir
+          - checkpoints
+          - desktop/node_modules
+          - desktop/dist
+          - desktop/src-tauri/target
+          - gradio_outputs
+
+  - name: ace-step-desktop
+    buildsystem: simple
+    build-commands:
+      - npm --prefix desktop install --offline --ignore-scripts
+      - npm --prefix desktop run build
+      - cargo build --manifest-path desktop/src-tauri/Cargo.toml --release --offline
+      - install -Dm755 desktop/src-tauri/target/release/ace-step-desktop /app/bin/ace-step
+      - install -Dm644 desktop/src-tauri/icons/icon.png /app/share/icons/hicolor/512x512/apps/ai.acestep.ACEStep.png
+    sources:
+      - *repository-source
+      - cargo-sources.json
+      - node-sources.json
+
+  - name: desktop-metadata
+    buildsystem: simple
+    build-commands:
+      - install -Dm644 ai.acestep.ACEStep.desktop /app/share/applications/ai.acestep.ACEStep.desktop
+      - install -Dm644 ai.acestep.ACEStep.metainfo.xml /app/share/metainfo/ai.acestep.ACEStep.metainfo.xml
+    sources:
+      - type: file
+        path: ai.acestep.ACEStep.desktop
+      - type: file
+        path: ai.acestep.ACEStep.metainfo.xml

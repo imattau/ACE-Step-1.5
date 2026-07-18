@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ACE-Step
+Comment=Generate and edit music with ACE-Step
+Exec=ace-step
+Icon=ai.acestep.ACEStep
+Terminal=false
+Categories=AudioVideo;Audio;
+StartupNotify=true
