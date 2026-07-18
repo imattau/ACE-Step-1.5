@@ -688,6 +688,18 @@ def main():
             # Now add API routes to Gradio's FastAPI app (app is available after launch)
             setup_api_routes(demo, dit_handler, llm_handler, api_key=args.api_key)
 
+            desktop_secret = os.environ.get("ACESTEP_DESKTOP_LAUNCH_SECRET")
+            if desktop_secret:
+                from acestep.desktop_routes import register_desktop_routes
+                from acestep.desktop_server import emit_startup_event
+
+                register_desktop_routes(
+                    demo.app,
+                    desktop_secret,
+                    lambda: bool(init_params and init_params.get("enable_generate")),
+                )
+                emit_startup_event("ready", port=args.port)
+
             if args.api_key:
                 print("API authentication enabled")
             print(
@@ -702,6 +714,8 @@ def main():
                     time.sleep(1)
             except KeyboardInterrupt:
                 print("\nShutting down...")
+            finally:
+                demo.close()
         else:
             demo.launch(
                 server_name=args.server_name,
@@ -715,6 +729,10 @@ def main():
                 allowed_paths=allowed_paths,  # include output_dir + user-provided
             )
     except Exception as e:
+        if os.environ.get("ACESTEP_DESKTOP_LAUNCH_SECRET"):
+            from acestep.desktop_server import emit_startup_event
+
+            emit_startup_event("failed", error=str(e))
         print(f"Error launching Gradio: {e}", file=sys.stderr)
         import traceback
 

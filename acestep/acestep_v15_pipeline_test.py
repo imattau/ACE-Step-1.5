@@ -61,6 +61,7 @@ class PipelineStartupBackendTests(unittest.TestCase):
             captured["init_params"] = init_params
             captured["language"] = language
             captured["checkpoints_dir"] = os.environ.get("ACESTEP_CHECKPOINTS_DIR")
+            captured["demo"] = demo
             return demo
 
         with patch.object(sys, "argv", argv), patch.dict(os.environ, env or {}, clear=True), patch(
@@ -165,6 +166,7 @@ class PipelineStartupBackendTests(unittest.TestCase):
 
         self.assertEqual("pt", llm_handler.initialize.call_args.kwargs["backend"])
         self.assertEqual("pt", captured["init_params"]["backend"])
+        captured["demo"].close.assert_called_once_with()
 
 
 if __name__ == "__main__":

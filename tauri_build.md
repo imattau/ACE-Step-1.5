@@ -200,6 +200,22 @@ Tests must cover:
 
 ## Phase 3: Desktop Python bootstrap
 
+Status: **Implementation complete; Flatpak integration validation pending.**
+
+Implemented:
+
+- Packaged `acestep-desktop` entry point with a deliberately narrow argument surface.
+- Fixed loopback binding, API enablement, no sharing, and no browser launch.
+- Runtime directory validation and rotating backend file logs.
+- Per-launch secret propagation and authenticated `/desktop/health` and
+  `/desktop/ready` endpoints.
+- Structured `launching` and `ready` events for the future Tauri parent process.
+- Explicit Gradio shutdown and structured startup failure events.
+
+Remaining integration validation:
+
+- Exercise the bootstrap inside the read-only Flatpak harness.
+
 Add a focused `acestep/desktop_server.py` module and the entry point:
 
 ```toml
