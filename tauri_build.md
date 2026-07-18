@@ -248,6 +248,26 @@ means initialization is complete and the UI can be displayed.
 
 ## Phase 4: Tauri shell
 
+Status: **Implementation complete; packaged-backend integration pending.**
+
+Implemented:
+
+- Pinned Tauri v2, TypeScript, and Vite projects with reproducible lockfiles.
+- Minimal startup UI with Retry, Open Logs, Copy Diagnostics, and Quit actions.
+- Rust-owned fixed backend process launch with no generic shell capability.
+- Private XDG path creation, random per-launch secret, loopback port allocation,
+  authenticated readiness polling, structured output capture, and child reaping.
+- Restrictive startup CSP and a single core-only capability for the local window.
+
+Validated:
+
+- `npm run build`
+- `cargo check --manifest-path desktop/src-tauri/Cargo.toml`
+
+Remaining integration work moves to Phase 5: install `/app/bin/acestep-desktop`, launch
+the combined Flatpak, exercise Retry and shutdown against the packaged Python runtime,
+and verify WebKit navigation to the ready Gradio endpoint.
+
 Add a self-contained desktop tree:
 
 ```text
