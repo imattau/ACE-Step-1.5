@@ -311,6 +311,44 @@ Do not expose generic shell execution to content loaded in the webview.
 
 ## Phase 5: Reproducible Flatpak build
 
+Status: **Complete.**
+
+Completed:
+
+- Selected GNOME 49, providing WebKitGTK 2.52 on Freedesktop 25.08.
+- Pinned the Rust stable and Node 22 SDK extensions.
+- Pinned Python 3.12.13 source and checksum for an isolated application interpreter.
+- Generated checksummed offline Cargo and npm sources from committed lockfiles.
+- Added desktop metadata, launcher, minimal permissions, and the combined build manifest.
+- Completed an offline `flatpak-builder` build through AppStream composition and finalization.
+- Generated the full CPython 3.12 dependency module from `uv.lock`, including the
+  pinned CUDA 12.8 builds of PyTorch, TorchVision, and TorchAudio.
+- Preserved Python headers required by Triton's runtime CUDA helper compilation.
+- Configured the launcher to locate the Flatpak NVIDIA driver extension without
+  bundling host driver libraries.
+- Verified Python 3.12.13 and the packaged imports inside the built sandbox.
+- Verified CUDA 12.8 with an NVIDIA GPU and completed a real backend startup using
+  existing checkpoints, including the optimized nano-vLLM path and ready event.
+
+Regenerate the Python sources after a dependency-lock change:
+
+```bash
+UV_CACHE_DIR=/tmp/ace-step-uv-cache uv export --frozen --no-dev \
+  --no-emit-project --no-emit-local --format pylock.toml \
+  --output-file /tmp/pylock.ace-step.toml
+UV_CACHE_DIR=/tmp/ace-step-uv-cache uv run --no-project --with packaging \
+  desktop/flatpak/build-aux/pylock_to_flatpak.py \
+  /tmp/pylock.ace-step.toml \
+  desktop/flatpak/python3-ace-step-dependencies.json
+```
+
+Build from the repository root:
+
+```bash
+flatpak-builder --user --install-deps-from=flathub --force-clean \
+  build-dir desktop/flatpak/ai.acestep.ACEStep.yaml
+```
+
 Select a current, supported Freedesktop or GNOME runtime compatible with Tauri's
 WebKit requirements and pin its branch.
 
@@ -333,7 +371,8 @@ Build requirements:
 - Do not include `.venv` or local checkpoints.
 - Do not bundle NVIDIA host driver libraries.
 - Install application files under `/app`.
-- Remove tests, headers, caches, and development metadata from the final artifact.
+- Remove tests, caches, and unneeded development metadata from the final artifact.
+  Retain the bundled Python headers because Triton requires them at runtime.
 - Reproduce the build from a clean source checkout without host dependencies.
 
 Validate that the existing Linux PyTorch CUDA dependency works with the matching

@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+export PYTHONHOME=/app/lib/ace-step-python
+export PYTHONPATH=/app/lib/ace-step:/app/lib/ace-step/acestep/third_parts/nano-vllm
+export LD_LIBRARY_PATH="/app/lib/ace-step-python/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+old_ifs=$IFS
+IFS=:
+for library_dir in $LD_LIBRARY_PATH; do
+    if [ -e "$library_dir/libcuda.so.1" ]; then
+        export TRITON_LIBCUDA_PATH=$library_dir
+        break
+    fi
+done
+IFS=$old_ifs
+
+exec /app/lib/ace-step-python/bin/python3.12 -m acestep.desktop_server "$@"
