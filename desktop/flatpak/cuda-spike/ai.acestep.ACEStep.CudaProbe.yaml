@@ -1,0 +1,30 @@
+app-id: ai.acestep.ACEStep.CudaProbe
+runtime: org.freedesktop.Platform
+runtime-version: "25.08"
+sdk: org.freedesktop.Sdk
+command: ace-step-cuda-probe
+
+# A successful comparison run proved CUDA compute works without --device=all.
+finish-args:
+  - --device=dri
+
+modules:
+  - python3-nvidia-cuda-runtime.json
+
+  # The generated module installs torch 2.10.0+cu128, torchaudio
+  # 2.10.0+cu128, soundfile, and their locked native dependencies for the SDK's
+  # Python. The production app must instead bundle supported Python 3.12.
+  - python3-ace-step-cuda-probe.json
+
+  - name: ace-step-cuda-probe
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 flatpak-cuda-probe /app/bin/ace-step-cuda-probe
+      - install -Dm644 flatpak_cuda_probe.py /app/lib/ace-step/flatpak_cuda_probe.py
+    sources:
+      - type: script
+        dest-filename: flatpak-cuda-probe
+        commands:
+          - exec /usr/bin/python3 /app/lib/ace-step/flatpak_cuda_probe.py "$@"
+      - type: file
+        path: ../../../scripts/flatpak_cuda_probe.py

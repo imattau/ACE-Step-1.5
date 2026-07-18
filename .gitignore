@@ -22,6 +22,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.flatpak-builder/
 build/
 develop-eggs/
 dist/
