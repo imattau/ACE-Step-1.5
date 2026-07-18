@@ -14,10 +14,10 @@ class DesktopFileAccessTest(unittest.TestCase):
         self.launcher = (root / "desktop/flatpak/build-aux/acestep-desktop").read_text()
 
     def test_manifest_has_no_broad_home_access(self) -> None:
-        """Only the preview download directory is host-writable."""
+        """No host directory is directly writable by the sandbox."""
         self.assertNotIn("--filesystem=home", self.manifest)
         self.assertNotIn("--filesystem=host", self.manifest)
-        self.assertIn("--filesystem=xdg-download:create", self.manifest)
+        self.assertNotIn("--filesystem=xdg-download", self.manifest)
 
     def test_launcher_prefers_desktop_portals(self) -> None:
         """GTK and WebKit file selection should use XDG Desktop Portal."""
