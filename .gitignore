@@ -262,3 +262,5 @@ docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/en/awesome.md
 package-lock.json
+!desktop/package-lock.json
+desktop/src-tauri/gen/

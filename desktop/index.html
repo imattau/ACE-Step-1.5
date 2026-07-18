@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACE-Step</title>
+  </head>
+  <body>
+    <main>
+      <div class="mark">ACE</div>
+      <h1>Starting ACE-Step</h1>
+      <p id="phase">Preparing the desktop backend…</p>
+      <pre id="details" hidden></pre>
+      <div class="actions">
+        <button id="retry" hidden>Retry</button>
+        <button id="open-logs">Open logs</button>
+        <button id="diagnostics">Copy diagnostics</button>
+        <button id="quit">Quit</button>
+      </div>
+    </main>
+    <script type="module" src="/src/startup.ts"></script>
+  </body>
+</html>
