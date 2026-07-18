@@ -7,6 +7,7 @@ import os
 import sys
 from typing import Dict, Any, Optional
 
+from acestep.runtime_paths import ensure_directory, get_output_dir
 from acestep.ui.gradio.i18n import t
 
 # Platform detection for Windows-specific fixes
@@ -18,8 +19,9 @@ PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))))))
 )
-DEFAULT_RESULTS_DIR = os.path.join(PROJECT_ROOT, "gradio_outputs").replace("\\", "/")
-os.makedirs(DEFAULT_RESULTS_DIR, exist_ok=True)
+DEFAULT_RESULTS_DIR = str(ensure_directory(get_output_dir(legacy_root=PROJECT_ROOT))).replace(
+    "\\", "/"
+)
 
 
 def clear_audio_outputs_for_new_generation():

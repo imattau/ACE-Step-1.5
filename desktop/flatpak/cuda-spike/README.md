@@ -69,3 +69,17 @@ decision; it can only validate the failure diagnostics.
 
 Recorded development-host results and remaining evidence are maintained in
 [`RESULTS.md`](RESULTS.md).
+
+## Runtime path validation
+
+The installed probe can also validate the Phase 2 path adapter while mounting the
+repository read-only:
+
+```bash
+flatpak run --filesystem="$PWD:ro" --command=python3 \
+  ai.acestep.ACEStep.CudaProbe \
+  "$PWD/scripts/flatpak_runtime_paths_probe.py" "$PWD"
+```
+
+Success requires `status: ok`, a rejected write beneath the mounted repository, and
+all reported mutable directories beneath Flatpak's private XDG locations.

@@ -21,6 +21,7 @@ class DesktopServerTests(unittest.TestCase):
         def pipeline_main() -> None:
             captured.extend(sys.argv)
             captured_environment["secret"] = os.environ.get("ACESTEP_DESKTOP_LAUNCH_SECRET")
+            captured_environment["output"] = os.environ.get("ACESTEP_OUTPUT_DIR")
 
         with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
             os.environ,
@@ -37,6 +38,8 @@ class DesktopServerTests(unittest.TestCase):
                     "launch-token",
                     "--log-dir",
                     str(Path(temp_dir) / "logs"),
+                    "--output-dir",
+                    str(Path(temp_dir) / "outputs"),
                 ]
             )
 
@@ -44,6 +47,7 @@ class DesktopServerTests(unittest.TestCase):
         self.assertIn("--enable-api", captured)
         self.assertNotIn("--share", captured)
         self.assertEqual("launch-token", captured_environment["secret"])
+        self.assertTrue(str(captured_environment["output"]).endswith("outputs"))
 
     def test_main_rejects_empty_secret(self) -> None:
         """An empty per-launch secret must stop before server startup."""

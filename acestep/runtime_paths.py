@@ -47,14 +47,17 @@ def get_output_dir(
     )
 
 
-def get_cache_dir(legacy_root: str | os.PathLike[str] | None = None) -> Path:
+def get_cache_dir(
+    legacy_root: str | os.PathLike[str] | None = None,
+    legacy_child: str = ".cache",
+) -> Path:
     """Resolve the application cache directory without creating it."""
     return _resolve_directory(
         None,
         "ACESTEP_CACHE_DIR",
         "cache",
         None,
-        _legacy_child(legacy_root, ".cache"),
+        _legacy_child(legacy_root, legacy_child),
     )
 
 

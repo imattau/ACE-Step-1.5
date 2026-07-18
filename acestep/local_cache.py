@@ -6,8 +6,10 @@ Supports persistent storage and TTL expiration.
 
 import json
 import os
-from typing import Any, Optional
 from threading import Lock
+from typing import Any, Optional
+
+from acestep.runtime_paths import ensure_directory, get_cache_dir
 
 try:
     from diskcache import Cache
@@ -44,10 +46,9 @@ class LocalCache:
             )
 
         if cache_dir is None:
-            cache_dir = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                ".cache",
-                "local_redis"
+            project_root = os.path.dirname(os.path.dirname(__file__))
+            cache_dir = str(
+                ensure_directory(get_cache_dir(project_root) / "local_redis")
             )
 
         os.makedirs(cache_dir, exist_ok=True)

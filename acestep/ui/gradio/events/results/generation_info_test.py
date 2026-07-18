@@ -2,12 +2,15 @@
 
 import importlib.util
 import os
+import tempfile
 from pathlib import Path
 import sys
 import types
 import unittest
 import builtins
 from unittest.mock import patch
+
+from acestep import runtime_paths
 
 
 def _load_module():
@@ -21,6 +24,7 @@ def _load_module():
     i18n_mod = types.ModuleType("acestep.ui.gradio.i18n")
     i18n_mod.t = lambda key, **_kwargs: key
     acestep_pkg.ui = ui_pkg
+    acestep_pkg.runtime_paths = runtime_paths
     ui_pkg.gradio = gradio_pkg
     gradio_pkg.i18n = i18n_mod
 
@@ -31,6 +35,7 @@ def _load_module():
         "sys.modules",
         {
             "acestep": acestep_pkg,
+            "acestep.runtime_paths": runtime_paths,
             "acestep.ui": ui_pkg,
             "acestep.ui.gradio": gradio_pkg,
             "acestep.ui.gradio.i18n": i18n_mod,
@@ -60,6 +65,19 @@ class ConstantsTests(unittest.TestCase):
             DEFAULT_RESULTS_DIR.replace("\\", "/").startswith(
                 PROJECT_ROOT.replace("\\", "/")
             )
+        )
+
+    def test_flatpak_default_results_dir_uses_xdg_data(self):
+        """Flatpak results should be stored beneath the writable XDG data root."""
+        with tempfile.TemporaryDirectory() as data_home, patch.dict(
+            os.environ,
+            {"FLATPAK_ID": "ai.acestep.ACEStep", "XDG_DATA_HOME": data_home},
+            clear=True,
+        ):
+            module = _load_module()
+        self.assertEqual(
+            str(Path(data_home) / "ace-step" / "outputs"),
+            module.DEFAULT_RESULTS_DIR,
         )
 
 

@@ -12,6 +12,8 @@ import numpy as np
 import torch
 from loguru import logger
 
+from acestep.runtime_paths import get_output_dir
+
 
 ARTIFACT_KIND = "generation_intermediates_v1"
 ARTIFACT_FIELD_MAP = {
@@ -167,7 +169,7 @@ def _gradio_output_json_candidates(base: Path) -> list[Path]:
     """Return newest matching JSON sidecars under ``gradio_outputs``."""
     if base.suffix.lower() == ".json":
         return []
-    results_root = Path.cwd() / "gradio_outputs"
+    results_root = get_output_dir(legacy_root=Path.cwd())
     if not results_root.exists():
         return []
     filename = base.with_suffix(".json").name

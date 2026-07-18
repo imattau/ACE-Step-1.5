@@ -42,6 +42,10 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.log_dir:
         os.environ["ACESTEP_LOG_DIR"] = args.log_dir
+    if args.output_dir:
+        os.environ["ACESTEP_OUTPUT_DIR"] = args.output_dir
+    if args.checkpoints_dir:
+        os.environ["ACESTEP_CHECKPOINTS_DIR"] = args.checkpoints_dir
     log_dir = ensure_directory(get_log_dir())
     _configure_file_logging(log_dir)
 

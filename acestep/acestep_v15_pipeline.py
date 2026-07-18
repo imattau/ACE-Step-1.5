@@ -400,6 +400,7 @@ def main():
     output_dir = str(ensure_directory(get_output_dir(args.output_dir, project_root)))
     # Gradio 6 expects forward slashes in allowed paths on Windows.
     output_dir = output_dir.replace("\\", "/")
+    os.environ["ACESTEP_OUTPUT_DIR"] = output_dir
     checkpoints_dir = str(
         ensure_directory(get_checkpoints_dir(args.checkpoints_dir, project_root))
     )
