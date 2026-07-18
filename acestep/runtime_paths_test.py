@@ -9,6 +9,7 @@ from unittest.mock import patch
 from acestep.runtime_paths import (
     RuntimePathError,
     ensure_directory,
+    get_cache_dir,
     get_checkpoints_dir,
     get_log_dir,
     get_output_dir,
@@ -48,6 +49,27 @@ class RuntimePathsTests(unittest.TestCase):
         """Flatpak logs fall back to the freedesktop state location."""
         with patch.dict(os.environ, {"FLATPAK_ID": "ai.acestep.ACEStep"}, clear=True):
             self.assertEqual(Path.home() / ".local/state/ace-step/logs", get_log_dir())
+
+    def test_flatpak_cache_ignores_read_only_application_tree(self) -> None:
+        """A sandbox launch should create cache data only beneath writable XDG storage."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            application_root = root / "app"
+            application_root.mkdir()
+            application_root.chmod(0o555)
+            cache_home = root / "cache home"
+            env = {
+                "FLATPAK_ID": "ai.acestep.ACEStep",
+                "XDG_CACHE_HOME": str(cache_home),
+            }
+            try:
+                with patch.dict(os.environ, env, clear=True):
+                    result = ensure_directory(get_cache_dir(application_root))
+                    self.assertTrue(result.is_dir())
+            finally:
+                application_root.chmod(0o755)
+
+        self.assertEqual(cache_home / "ace-step", result)
 
     def test_ensure_directory_rejects_a_file(self) -> None:
         """A configured file produces an actionable directory error."""

@@ -150,7 +150,7 @@ Acceptance criteria:
 
 ## Phase 2: Runtime path foundation
 
-Status: **In progress (foundation and primary startup consumers complete).**
+Status: **Complete.**
 
 Implemented:
 
@@ -159,12 +159,13 @@ Implemented:
 - Flatpak-safe output and checkpoint defaults in the main pipeline and model downloader.
 - Focused coverage for precedence, native defaults, Unicode/spaces, missing state XDG,
   and invalid file paths.
+- Disk cache, API lifespan cache, API results, and result-sidecar lookup integration.
+- Read-only application-tree validation with writable Flatpak XDG storage.
 
-Remaining before Phase 2 is closed:
-
-- Route the disk cache and API lifespan cache through the central resolver.
-- Route result/file-serving defaults through the resolved output directory.
-- Verify startup with the application files mounted read-only in the Flatpak harness.
+Validation result (2026-07-19): the installed CUDA probe Flatpak mounted the repository
+read-only and ran `scripts/flatpak_runtime_paths_probe.py` successfully. The attempted
+application-tree write was rejected, while all five mutable directory classes were
+created beneath `~/.var/app/ai.acestep.ACEStep.CudaProbe/`.
 
 Add a focused module such as `acestep/runtime_paths.py` to resolve:
 

@@ -15,10 +15,13 @@ from fastapi import APIRouter, HTTPException, Request, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
+from acestep.runtime_paths import ensure_directory, get_cache_dir, get_output_dir
+
 # Global results directory inside project root
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DEFAULT_RESULTS_DIR = os.path.join(PROJECT_ROOT, "gradio_outputs").replace("\\", "/")
-os.makedirs(DEFAULT_RESULTS_DIR, exist_ok=True)
+DEFAULT_RESULTS_DIR = str(ensure_directory(get_output_dir(legacy_root=PROJECT_ROOT))).replace(
+    "\\", "/"
+)
 
 # API Key storage (set via setup_api_routes)
 _api_key: Optional[str] = None
@@ -101,8 +104,7 @@ async def verify_api_key(authorization: Optional[str] = Header(None)):
 # Use diskcache to store results
 try:
     import diskcache
-    _cache_dir = os.path.join(os.path.dirname(__file__), ".cache", "api_results")
-    os.makedirs(_cache_dir, exist_ok=True)
+    _cache_dir = str(ensure_directory(get_cache_dir(PROJECT_ROOT) / "api_results"))
     _result_cache = diskcache.Cache(_cache_dir)
     DISKCACHE_AVAILABLE = True
 except ImportError:

@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from threading import Lock
 from typing import Any, Callable
 
+from acestep.runtime_paths import get_cache_dir
+
 
 @dataclass
 class LifespanRuntime:
@@ -57,7 +59,12 @@ def initialize_lifespan_runtime(
         os.environ.pop(proxy_var, None)
 
     project_root = get_project_root()
-    cache_root = os.path.join(project_root, ".cache", "acestep")
+    cache_root = str(
+        get_cache_dir(
+            project_root,
+            legacy_child=os.path.join(".cache", "acestep"),
+        )
+    )
     tmp_root = (os.getenv("ACESTEP_TMPDIR") or os.path.join(cache_root, "tmp")).strip()
     triton_cache_root = (os.getenv("TRITON_CACHE_DIR") or os.path.join(cache_root, "triton")).strip()
     inductor_cache_root = (

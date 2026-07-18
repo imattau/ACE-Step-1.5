@@ -52,7 +52,34 @@ class LifespanRuntimeTests(unittest.TestCase):
         self.assertIsNone(runtime.handler3)
         training_state_init.assert_called_once_with(app)
         mock_initialize_local_cache.assert_called_once_with(app, runtime.cache_root)
+        self.assertEqual(os.path.join("k:/repo", ".cache", "acestep"), runtime.cache_root)
         self.assertTrue(mock_makedirs.called)
+
+    @patch("acestep.api.lifespan_runtime._initialize_local_cache")
+    @patch("acestep.api.lifespan_runtime.os.makedirs")
+    def test_flatpak_uses_xdg_cache_root(
+        self,
+        _mock_makedirs: MagicMock,
+        _mock_initialize_local_cache: MagicMock,
+    ) -> None:
+        """API runtime caches should avoid the application tree under Flatpak."""
+        app = SimpleNamespace(state=SimpleNamespace())
+        env = {"FLATPAK_ID": "ai.acestep.ACEStep", "XDG_CACHE_HOME": "/xdg cache"}
+        with patch.dict(os.environ, env, clear=True):
+            runtime = initialize_lifespan_runtime(
+                app=app,
+                store=object(),
+                queue_maxsize=1,
+                avg_window=1,
+                initial_avg_job_seconds=1.0,
+                get_project_root=MagicMock(return_value="/app"),
+                initialize_training_state_fn=MagicMock(),
+                ace_handler_cls=MagicMock,
+                llm_handler_cls=MagicMock,
+            )
+
+        self.assertEqual("/xdg cache/ace-step", runtime.cache_root)
+        runtime.executor.shutdown(wait=False)
 
     @patch("acestep.api.lifespan_runtime._initialize_local_cache")
     @patch("acestep.api.lifespan_runtime.os.makedirs")
