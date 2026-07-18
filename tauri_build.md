@@ -150,6 +150,22 @@ Acceptance criteria:
 
 ## Phase 2: Runtime path foundation
 
+Status: **In progress (foundation and primary startup consumers complete).**
+
+Implemented:
+
+- Central Flatpak/XDG path resolution in `acestep/runtime_paths.py`.
+- Explicit `--output-dir` and `--checkpoints-dir` startup overrides.
+- Flatpak-safe output and checkpoint defaults in the main pipeline and model downloader.
+- Focused coverage for precedence, native defaults, Unicode/spaces, missing state XDG,
+  and invalid file paths.
+
+Remaining before Phase 2 is closed:
+
+- Route the disk cache and API lifespan cache through the central resolver.
+- Route result/file-serving defaults through the resolved output directory.
+- Verify startup with the application files mounted read-only in the Flatpak harness.
+
 Add a focused module such as `acestep/runtime_paths.py` to resolve:
 
 - Application data directory

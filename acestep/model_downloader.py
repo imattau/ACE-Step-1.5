@@ -16,6 +16,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from acestep.runtime_paths import get_checkpoints_dir as resolve_checkpoints_dir
+
 
 # =============================================================================
 # Model Code File Sync (GitHub repo -> checkpoint directories)
@@ -349,14 +351,12 @@ def get_checkpoints_dir(custom_dir: Optional[str] = None) -> Path:
     2. ``ACESTEP_CHECKPOINTS_DIR`` environment variable – allows users to
        share a single model directory across multiple ACE-Step installations,
        avoiding duplicate downloads that waste disk space.
-    3. ``<project_root>/checkpoints`` (original default)
+    3. Flatpak application data directory when sandboxed
+    4. ``<project_root>/checkpoints`` (original native default)
     """
     if custom_dir:
         return Path(custom_dir)
-    env_dir = os.environ.get("ACESTEP_CHECKPOINTS_DIR")
-    if env_dir:
-        return Path(env_dir).expanduser().resolve()
-    return get_project_root() / "checkpoints"
+    return resolve_checkpoints_dir(legacy_root=get_project_root())
 
 
 def _contains_model_weights(model_path: Path) -> bool:
