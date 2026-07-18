@@ -7,6 +7,7 @@ pub struct RuntimePaths {
     pub checkpoints: PathBuf,
     pub logs: PathBuf,
     pub outputs: PathBuf,
+    pub model_manifest: PathBuf,
     pub runtime_metadata: PathBuf,
 }
 
@@ -18,6 +19,7 @@ impl RuntimePaths {
             checkpoints: data.join("checkpoints"),
             logs: state.join("logs"),
             outputs: data.join("outputs"),
+            model_manifest: data.join("desktop-models.json"),
             runtime_metadata: state.join("desktop-runtime.json"),
         };
         for path in [&paths.checkpoints, &paths.logs, &paths.outputs] {

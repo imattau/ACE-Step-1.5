@@ -380,6 +380,21 @@ Flatpak NVIDIA driver extension.
 
 ## Phase 6: Model management
 
+Status: **Complete.**
+
+The desktop shell now checks model state before starting inference. The first-run
+screen offers the supported 1.7B and 0.6B language models, reports the estimated
+download and available disk space, and starts the backend only after verification.
+Downloads use Hugging Face's resumable snapshot cache in a private `.download`
+staging directory. Required weight artifacts are verified before each component is
+atomically moved into the live checkpoints directory. The selected language model
+is persisted separately in `desktop-models.json`, so a completed installation starts
+offline and survives application updates.
+
+The current progress UI reports the active download/verification phase rather than
+per-file byte counts. Hugging Face performs content-addressed download validation;
+no additional upstream whole-model checksum manifest is currently published.
+
 Do not include the approximately 9.4 GB model set in the Flatpak artifact. Store
 models under `$XDG_DATA_HOME/ace-step/checkpoints` and use the existing Python model
 downloader behind a small service boundary.

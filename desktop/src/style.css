@@ -24,6 +24,14 @@ main {
 
 h1 { margin-bottom: 0.4rem; }
 p { color: #aeb4c1; }
+section {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid #303746;
+  border-radius: 0.5rem;
+}
+label { display: block; margin-bottom: 0.4rem; }
+select { margin-right: 0.75rem; padding: 0.6rem; }
 pre {
   max-height: 14rem;
   overflow: auto;
