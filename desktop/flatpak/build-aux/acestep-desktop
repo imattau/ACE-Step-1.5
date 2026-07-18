@@ -4,6 +4,7 @@ set -eu
 export PYTHONHOME=/app/lib/ace-step-python
 export PYTHONPATH=/app/lib/ace-step:/app/lib/ace-step/acestep/third_parts/nano-vllm
 export LD_LIBRARY_PATH="/app/lib/ace-step-python/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export GTK_USE_PORTAL=1
 
 old_ifs=$IFS
 IFS=:
