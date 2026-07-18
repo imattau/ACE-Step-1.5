@@ -44,7 +44,12 @@ impl BackendManager {
         }
     }
 
-    pub fn start(&self, app: AppHandle, paths: &RuntimePaths) -> Result<(), String> {
+    pub fn start(
+        &self,
+        app: AppHandle,
+        paths: &RuntimePaths,
+        lm_model: &str,
+    ) -> Result<(), String> {
         let stale_metadata = self.metadata_path.exists();
         self.stop();
         let port = reserve_port()?;
@@ -66,6 +71,8 @@ impl BackendManager {
                 &checkpoints_arg,
                 "--log-dir",
                 &logs_arg,
+                "--lm-model",
+                lm_model,
             ])
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
@@ -173,7 +180,7 @@ pub(crate) fn launch_secret() -> Result<String, String> {
     Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
 }
 
-fn backend_command() -> String {
+pub(crate) fn backend_command() -> String {
     if cfg!(debug_assertions) {
         std::env::var("ACESTEP_DESKTOP_COMMAND").unwrap_or_else(|_| "acestep-desktop".into())
     } else {

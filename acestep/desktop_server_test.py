@@ -61,6 +61,18 @@ class DesktopServerTests(unittest.TestCase):
                 ["--port", "8765", "--launch-secret", "secret", "--share"]
             )
 
+    @patch("acestep.desktop_server.model_status")
+    def test_model_status_does_not_require_backend_credentials(self, status) -> None:
+        """First-run inspection is available before the authenticated server starts."""
+        status.return_value.to_dict.return_value = {"ready": False}
+        with tempfile.TemporaryDirectory() as temp_dir, patch("builtins.print") as output:
+            desktop_server.main(
+                ["--model-action", "status", "--checkpoints-dir", temp_dir]
+            )
+
+        status.assert_called_once_with(Path(temp_dir), "acestep-5Hz-lm-1.7B")
+        output.assert_called_once_with('{"ready": false}', flush=True)
+
 
 if __name__ == "__main__":
     unittest.main()

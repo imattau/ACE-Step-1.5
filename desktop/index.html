@@ -10,6 +10,15 @@
       <div class="mark">ACE</div>
       <h1>Starting ACE-Step</h1>
       <p id="phase">Preparing the desktop backend…</p>
+      <section id="models" hidden>
+        <p id="model-summary"></p>
+        <label for="lm-model">Language model</label>
+        <select id="lm-model">
+          <option value="acestep-5Hz-lm-1.7B">1.7B — higher quality</option>
+          <option value="acestep-5Hz-lm-0.6B">0.6B — smaller download</option>
+        </select>
+        <button id="install-models">Download models</button>
+      </section>
       <pre id="details" hidden></pre>
       <div class="actions">
         <button id="retry" hidden>Retry</button>
