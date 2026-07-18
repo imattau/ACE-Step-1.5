@@ -69,6 +69,8 @@ def main(argv: list[str] | None = None) -> None:
         args.launch_secret,
         "--language",
         args.language,
+        "--service_mode",
+        "true",
     ]
     _append_path_argument(pipeline_args, "--output-dir", args.output_dir)
     _append_path_argument(pipeline_args, "--checkpoints-dir", args.checkpoints_dir)

@@ -429,6 +429,21 @@ Keep application, runtime, and model versions separate in a data manifest:
 
 ## Phase 7: File access and portals
 
+Status: **Complete for the Linux preview.**
+
+The Flatpak has no full-home or host filesystem permission. The launcher forces GTK
+and WebKitGTK file selection through XDG Desktop Portal, so uploaded source audio is
+granted to the sandbox through the document portal. Models, configuration, logs, and
+generated working files remain in private XDG application directories. Desktop
+startup now forces service mode, hiding training and its unsupported arbitrary
+directory workflows.
+
+Preview exports use the narrowly scoped `--filesystem=xdg-download:create`
+permission so WebKit downloads initiated by the existing Gradio Save controls reach
+the user's Downloads directory. Replace this temporary permission with a save-file
+portal handler before stable/Flathub release. External model directories remain
+unsupported; model data stays in the private application data directory.
+
 Do not request `--filesystem=home`.
 
 - Keep models, configuration, logs, and default outputs in private XDG directories.

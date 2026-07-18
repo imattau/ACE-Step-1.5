@@ -45,6 +45,7 @@ class DesktopServerTests(unittest.TestCase):
 
         self.assertEqual("127.0.0.1", captured[captured.index("--server-name") + 1])
         self.assertIn("--enable-api", captured)
+        self.assertEqual("true", captured[captured.index("--service_mode") + 1])
         self.assertNotIn("--share", captured)
         self.assertEqual("launch-token", captured_environment["secret"])
         self.assertTrue(str(captured_environment["output"]).endswith("outputs"))
