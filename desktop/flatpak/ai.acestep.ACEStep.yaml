@@ -47,6 +47,7 @@ modules:
       - mkdir -p /app/lib/ace-step /app/bin
       - cp -a acestep /app/lib/ace-step/acestep
       - install -Dm755 desktop/flatpak/build-aux/acestep-desktop /app/bin/acestep-desktop
+      - install -Dm755 scripts/flatpak_audio_probe.py /app/bin/ace-step-audio-probe
     sources:
       - &repository-source
         type: dir

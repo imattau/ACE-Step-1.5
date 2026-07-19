@@ -201,7 +201,7 @@ Tests must cover:
 
 ## Phase 3: Desktop Python bootstrap
 
-Status: **Implementation complete; Flatpak integration validation pending.**
+Status: **Complete.**
 
 Implemented:
 
@@ -213,9 +213,9 @@ Implemented:
 - Structured `launching` and `ready` events for the future Tauri parent process.
 - Explicit Gradio shutdown and structured startup failure events.
 
-Remaining integration validation:
+Completed integration validation:
 
-- Exercise the bootstrap inside the read-only Flatpak harness.
+- Exercised the bootstrap inside the read-only Flatpak harness.
 
 Add a focused `acestep/desktop_server.py` module and the entry point:
 
@@ -248,7 +248,7 @@ means initialization is complete and the UI can be displayed.
 
 ## Phase 4: Tauri shell
 
-Status: **Implementation complete; packaged-backend integration pending.**
+Status: **Complete.**
 
 Implemented:
 
@@ -263,10 +263,8 @@ Validated:
 
 - `npm run build`
 - `cargo check --manifest-path desktop/src-tauri/Cargo.toml`
-
-Remaining integration work moves to Phase 5: install `/app/bin/acestep-desktop`, launch
-the combined Flatpak, exercise Retry and shutdown against the packaged Python runtime,
-and verify WebKit navigation to the ready Gradio endpoint.
+- Installed `/app/bin/acestep-desktop` in the combined Flatpak and exercised packaged
+  Python startup, authenticated readiness, WebKit navigation, and backend shutdown.
 
 Add a self-contained desktop tree:
 
@@ -459,6 +457,19 @@ A preview may temporarily request narrowly scoped access such as
 `--filesystem=xdg-music:create`, but stable release should prefer portal-based export.
 
 ## Phase 8: Audio integration
+
+Status: **Complete.**
+
+The GNOME 49 runtime supplies FFmpeg and the GStreamer codecs used by WebKitGTK.
+The Flatpak installs `ace-step-audio-probe`, which creates deterministic PCM audio
+and performs packaged FFmpeg encode/decode plus GStreamer headless playback decoding
+for WAV, FLAC, MP3, Ogg Vorbis, Opus, and M4A/AAC. The probe also reports PulseAudio
+compatibility socket availability without treating a missing output device as fatal.
+
+Validated inside the final sandbox both with the host PipeWire/PulseAudio socket and
+with an intentionally missing `XDG_RUNTIME_DIR`. All codec round trips passed in both
+cases. Portal import/export is covered by Phase 7, and the manifest retains only the
+`pulseaudio` socket required by the WebKit audio stack.
 
 Package and test the audio codecs and native libraries required by ACE-Step. Support:
 
