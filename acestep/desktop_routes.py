@@ -12,6 +12,7 @@ def register_desktop_routes(
     app: object,
     launch_secret: str,
     is_ready: Callable[[], bool],
+    diagnostics_provider: Callable[[], dict[str, object]] | None = None,
 ) -> None:
     """Add secret-protected desktop health and readiness endpoints.
 
@@ -19,6 +20,8 @@ def register_desktop_routes(
         app: FastAPI-compatible application receiving the router.
         launch_secret: Per-launch secret shared only with the Tauri process.
         is_ready: Callback reporting whether model initialization completed.
+        diagnostics_provider: Optional callback returning Python-side
+            diagnostics (PyTorch version, GPU info, model state, etc.).
 
     Raises:
         ValueError: If the launch secret is empty.
@@ -52,5 +55,15 @@ def register_desktop_routes(
         authenticate(x_acestep_launch_secret)
         ready = is_ready()
         return {"status": "ready" if ready else "starting", "ready": ready}
+
+    @router.get("/diagnostics")
+    async def diagnostics(
+        x_acestep_launch_secret: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        """Return Python-side diagnostics for the Tauri diagnostics report."""
+        authenticate(x_acestep_launch_secret)
+        if diagnostics_provider is not None:
+            return diagnostics_provider()
+        return {"error": "no diagnostics provider registered"}
 
     app.include_router(router)

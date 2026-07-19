@@ -1,12 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-import { copyDiagnostics, renderStatus, type BackendStatus } from "./diagnostics";
+import { copyDiagnostics, renderStatus, showDiagnostics, type BackendStatus } from "./diagnostics";
 import "./style.css";
 
 const retry = document.querySelector<HTMLButtonElement>("#retry")!;
 const openLogs = document.querySelector<HTMLButtonElement>("#open-logs")!;
 const diagnostics = document.querySelector<HTMLButtonElement>("#diagnostics")!;
+const showDiag = document.querySelector<HTMLButtonElement>("#show-diag")!;
 const quit = document.querySelector<HTMLButtonElement>("#quit")!;
 const models = document.querySelector<HTMLElement>("#models")!;
 const modelSummary = document.querySelector<HTMLParagraphElement>("#model-summary")!;
@@ -70,6 +71,7 @@ installModels.addEventListener("click", async () => {
 });
 
 diagnostics.addEventListener("click", () => copyDiagnostics());
+showDiag.addEventListener("click", () => showDiagnostics());
 openLogs.addEventListener("click", () => invoke("open_logs"));
 quit.addEventListener("click", () => invoke("quit_app"));
 

@@ -3,12 +3,15 @@
 mod backend;
 #[cfg(test)]
 mod backend_test;
+mod desktop_log;
+mod diagnostics;
 mod downloads;
 mod models;
 mod paths;
 mod readiness;
 
 use backend::BackendManager;
+use desktop_log::DesktopLog;
 use paths::RuntimePaths;
 use std::sync::Mutex;
 use tauri::{Manager, State};
@@ -17,11 +20,13 @@ struct DesktopState {
     backend: BackendManager,
     paths: RuntimePaths,
     lm_model: Mutex<String>,
+    log: DesktopLog,
 }
 
 #[tauri::command]
 fn retry_backend(app: tauri::AppHandle, state: State<'_, DesktopState>) -> Result<(), String> {
     let lm_model = state.lm_model.lock().map_err(|_| "model lock poisoned")?;
+    state.log.write(&format!("retry: lm_model={lm_model}"));
     state.backend.start(app, &state.paths, &lm_model)
 }
 
@@ -32,7 +37,9 @@ fn backend_status(state: State<'_, DesktopState>) -> backend::BackendStatus {
 
 #[tauri::command]
 fn backend_diagnostics(state: State<'_, DesktopState>) -> String {
-    state.backend.diagnostics()
+    let report = diagnostics::gather(&state.paths, &state.backend);
+    let python = state.backend.fetch_python_diagnostics();
+    diagnostics::format_report(&report, python.as_deref())
 }
 
 #[tauri::command]
@@ -56,6 +63,7 @@ fn install_models(
     let status = models::install(&state.paths.checkpoints, &lm_model)?;
     models::save_selection(&state.paths.model_manifest, &lm_model)?;
     *state.lm_model.lock().map_err(|_| "model lock poisoned")? = lm_model.clone();
+    state.log.write(&format!("models installed: {lm_model}"));
     state.backend.start(app, &state.paths, &lm_model)?;
     Ok(status)
 }
@@ -78,11 +86,14 @@ fn main() {
     let paths = RuntimePaths::resolve().expect("failed to create private runtime directories");
     let backend = BackendManager::new(paths.runtime_metadata.clone());
     let lm_model = Mutex::new(models::load_selection(&paths.model_manifest));
+    let log = DesktopLog::new(paths.logs.clone()).expect("failed to create desktop.log");
+    log.write("starting desktop shell");
     tauri::Builder::default()
         .manage(DesktopState {
             backend,
             paths,
             lm_model,
+            log,
         })
         .invoke_handler(tauri::generate_handler![
             backend_status,
@@ -104,6 +115,7 @@ fn main() {
                 .on_download(|_, event| downloads::handle_download(event))
                 .build()?;
             let state = app.state::<DesktopState>();
+            state.log.write("window created");
             let lm_model = state
                 .lm_model
                 .lock()
@@ -113,6 +125,7 @@ fn main() {
                 .map(|status| status.ready)
                 .unwrap_or(false)
             {
+                state.log.write("models ready, starting backend");
                 let _ = state
                     .backend
                     .start(app.handle().clone(), &state.paths, &lm_model);
@@ -126,7 +139,10 @@ fn main() {
                 event,
                 tauri::RunEvent::Exit | tauri::RunEvent::ExitRequested { .. }
             ) {
-                app.state::<DesktopState>().backend.stop();
+                let state = app.state::<DesktopState>();
+                state.log.write("shutting down backend");
+                state.backend.stop();
+                state.log.write("desktop shell stopped");
             }
         });
 }

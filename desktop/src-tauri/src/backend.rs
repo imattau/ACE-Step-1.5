@@ -9,7 +9,7 @@ use std::{
     thread,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 
 use crate::paths::RuntimePaths;
@@ -24,10 +24,17 @@ pub struct BackendStatus {
     pub recent_output: Vec<String>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BackendMetadata {
+    pub pid: u32,
+    pub port: u16,
+}
+
 pub struct BackendManager {
     child: Mutex<Option<Child>>,
     metadata_path: PathBuf,
     status: Arc<Mutex<BackendStatus>>,
+    launch_secret: Mutex<Option<String>>,
 }
 
 impl BackendManager {
@@ -41,6 +48,7 @@ impl BackendManager {
                 url: None,
                 recent_output: Vec::new(),
             })),
+            launch_secret: Mutex::new(None),
         }
     }
 
@@ -100,6 +108,9 @@ impl BackendManager {
             return Err(message);
         }
         *self.child.lock().map_err(|_| "backend lock poisoned")? = Some(child);
+        if let Ok(mut guard) = self.launch_secret.lock() {
+            *guard = Some(secret.clone());
+        }
         update_status(&app, &self.status, "starting", "Loading models", None);
         if stale_metadata {
             append_diagnostic(&app, &self.status, "Removed stale runtime metadata");
@@ -131,8 +142,34 @@ impl BackendManager {
             })
     }
 
-    pub fn diagnostics(&self) -> String {
-        serde_json::to_string_pretty(&self.status()).unwrap_or_else(|error| error.to_string())
+    pub fn metadata(&self) -> Option<BackendMetadata> {
+        let content = std::fs::read_to_string(&self.metadata_path).ok()?;
+        serde_json::from_str(&content).ok()
+    }
+
+    pub fn fetch_python_diagnostics(&self) -> Option<String> {
+        let (port, secret) = {
+            let meta = self.metadata()?;
+            let guard = self.launch_secret.lock().ok()?;
+            let sec = guard.as_ref()?.clone();
+            (meta.port, sec)
+        };
+        let address = format!("127.0.0.1:{port}")
+            .parse()
+            .expect("valid loopback");
+        use std::io::{Read, Write};
+        use std::net::TcpStream;
+        use std::time::Duration;
+        let mut stream = TcpStream::connect_timeout(&address, Duration::from_millis(500)).ok()?;
+        let request = format!(
+            "GET /desktop/diagnostics HTTP/1.1\r\nHost: 127.0.0.1\r\nX-ACEStep-Launch-Secret: {secret}\r\nConnection: close\r\n\r\n"
+        );
+        stream.write_all(request.as_bytes()).ok()?;
+        let mut response = String::new();
+        stream.read_to_string(&mut response).ok()?;
+        // Extract JSON body after headers
+        let body = response.split("\r\n\r\n").nth(1)?;
+        Some(body.to_string())
     }
 
     pub fn fail(&self, app: &AppHandle, message: &str) {

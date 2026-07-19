@@ -694,12 +694,18 @@ def main():
             desktop_secret = os.environ.get("ACESTEP_DESKTOP_LAUNCH_SECRET")
             if desktop_secret:
                 from acestep.desktop_routes import register_desktop_routes
-                from acestep.desktop_server import emit_startup_event
+                from acestep.desktop_server import (
+                    build_diagnostics_provider,
+                    emit_startup_event,
+                )
 
                 register_desktop_routes(
                     demo.app,
                     desktop_secret,
                     lambda: bool(init_params and init_params.get("enable_generate")),
+                    diagnostics_provider=build_diagnostics_provider(
+                        args.checkpoints_dir, args.lm_model_path or ""
+                    ),
                 )
                 emit_startup_event("ready", port=args.port)
 

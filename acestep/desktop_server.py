@@ -30,8 +30,71 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+_error_buffer: list[str] = []
+
+
+def get_sanitized_errors() -> list[str]:
+    """Return the last several sanitized error messages."""
+    return list(_error_buffer)
+
+
+def _capture_error(details: dict[str, object]) -> None:
+    """Append a sanitized error message to the bounded ring buffer."""
+    error = str(details.get("error", ""))
+    if error:
+        sanitized = error.replace("/home/", "~/")
+        _error_buffer.append(sanitized)
+        if len(_error_buffer) > 10:
+            _error_buffer.pop(0)
+
+
+def build_diagnostics_provider(
+    checkpoints_dir: str | None,
+    lm_model: str,
+) -> Callable[[], dict[str, object]]:
+    """Return a callable that gathers Python-side diagnostics on demand.
+
+    The returned closure queries PyTorch, CUDA, and model state at call
+    time so the report reflects the current running environment.
+    """
+    checkpoints = Path(checkpoints_dir) if checkpoints_dir else None
+
+    def _provider() -> dict[str, object]:
+        result: dict[str, object] = {}
+        try:
+            import torch
+
+            result["torchVersion"] = torch.__version__
+            result["cudaVersion"] = getattr(torch.version, "cuda", None)
+            cuda_avail = torch.cuda.is_available()
+            result["cudaAvailable"] = cuda_avail
+            if cuda_avail:
+                result["gpuName"] = torch.cuda.get_device_name(0)
+                result["vramBytes"] = torch.cuda.get_device_properties(0).total_memory
+        except Exception:
+            result["torchError"] = "torch import failed"
+        try:
+            result["inferenceBackend"] = os.environ.get("ACESTEP_LM_BACKEND", "")
+        except Exception:
+            pass
+        if checkpoints is not None and checkpoints.exists():
+            try:
+                state = model_status(checkpoints, lm_model)
+                result["modelStatus"] = state.to_dict()
+            except Exception:
+                pass
+        errors = get_sanitized_errors()
+        if errors:
+            result["recentErrors"] = errors
+        return result
+
+    return _provider
+
+
 def emit_startup_event(phase: str, **details: object) -> None:
     """Write a machine-readable lifecycle event for the Tauri parent process."""
+    if phase == "failed":
+        _capture_error(details)  # type: ignore[arg-type]
     print(json.dumps({"event": "acestep.desktop", "phase": phase, **details}), flush=True)
 
 

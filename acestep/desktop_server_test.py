@@ -74,6 +74,37 @@ class DesktopServerTests(unittest.TestCase):
         status.assert_called_once_with(Path(temp_dir), "acestep-5Hz-lm-1.7B")
         output.assert_called_once_with('{"ready": false}', flush=True)
 
+    def test_diagnostics_provider_returns_callable(self) -> None:
+        """build_diagnostics_provider returns a callable function."""
+        provider = desktop_server.build_diagnostics_provider(None, "test-model")
+        result = provider()
+        self.assertIn("torchVersion", result)
+        self.assertIn("cudaAvailable", result)
+
+    def test_error_buffer_captures_sanitized_errors(self) -> None:
+        """emit_startup_event with failed phase populates the error buffer."""
+        desktop_server._error_buffer.clear()
+        desktop_server.emit_startup_event("failed", error="error in /home/user/path")
+        errors = desktop_server.get_sanitized_errors()
+        self.assertEqual(1, len(errors))
+        self.assertIn("~/", errors[0])
+        self.assertNotIn("/home/", errors[0])
+
+    def test_error_buffer_bounded_at_ten(self) -> None:
+        """Error buffer should not exceed its maximum size."""
+        desktop_server._error_buffer.clear()
+        for i in range(15):
+            desktop_server.emit_startup_event("failed", error=f"error {i}")
+        errors = desktop_server.get_sanitized_errors()
+        self.assertLessEqual(len(errors), 10)
+
+    def test_startup_event_does_not_capture_non_failure(self) -> None:
+        """Non-failed startup events must not populate the error buffer."""
+        desktop_server._error_buffer.clear()
+        desktop_server.emit_startup_event("starting")
+        desktop_server.emit_startup_event("ready", url="http://127.0.0.1:8765")
+        self.assertEqual(0, len(desktop_server.get_sanitized_errors()))
+
 
 if __name__ == "__main__":
     unittest.main()

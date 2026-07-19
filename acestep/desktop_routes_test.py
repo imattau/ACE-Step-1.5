@@ -37,6 +37,26 @@ class DesktopRoutesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must not be empty"):
             register_desktop_routes(FastAPI(), "", lambda: True)
 
+    def test_diagnostics_requires_launch_secret(self) -> None:
+        """Diagnostics endpoint must require the launch secret."""
+        app = FastAPI()
+        provider = lambda: {"torchVersion": "2.6.0"}
+        register_desktop_routes(app, "secret", lambda: True, diagnostics_provider=provider)
+        endpoint = next(route.endpoint for route in app.routes if route.path == "/desktop/diagnostics")
+        with self.assertRaises(HTTPException) as context:
+            asyncio.run(endpoint(None))
+        self.assertEqual(401, context.exception.status_code)
+
+    def test_diagnostics_returns_provider_data(self) -> None:
+        """Diagnostics endpoint returns the provider dict when authenticated."""
+        app = FastAPI()
+        provider = lambda: {"torchVersion": "2.6.0", "cudaAvailable": False}
+        register_desktop_routes(app, "secret", lambda: True, diagnostics_provider=provider)
+        endpoint = next(route.endpoint for route in app.routes if route.path == "/desktop/diagnostics")
+        result = asyncio.run(endpoint("secret"))
+        self.assertEqual("2.6.0", result["torchVersion"])
+        self.assertFalse(result["cudaAvailable"])
+
 
 if __name__ == "__main__":
     unittest.main()

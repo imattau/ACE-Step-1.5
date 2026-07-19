@@ -14,7 +14,18 @@ export function renderStatus(status: BackendStatus): void {
   details.textContent = status.recentOutput.join("\n");
 }
 
+export async function fetchDiagnostics(): Promise<string> {
+  return invoke<string>("backend_diagnostics");
+}
+
 export async function copyDiagnostics(): Promise<void> {
-  const report = await invoke<string>("backend_diagnostics");
+  const report = await fetchDiagnostics();
   await navigator.clipboard.writeText(report);
+}
+
+export async function showDiagnostics(): Promise<void> {
+  const report = await fetchDiagnostics();
+  const details = document.querySelector<HTMLPreElement>("#details")!;
+  details.hidden = false;
+  details.textContent = report;
 }
