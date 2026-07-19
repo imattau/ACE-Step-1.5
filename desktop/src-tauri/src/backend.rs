@@ -7,6 +7,7 @@ use std::{
     process::{Child, Command, Stdio},
     sync::{Arc, Mutex},
     thread,
+    time::Duration,
 };
 
 use serde::{Deserialize, Serialize};
@@ -150,6 +151,9 @@ impl BackendManager {
     pub fn fetch_python_diagnostics(&self) -> Option<String> {
         let (port, secret) = {
             let meta = self.metadata()?;
+            if meta.port == 0 {
+                return None;
+            }
             let guard = self.launch_secret.lock().ok()?;
             let sec = guard.as_ref()?.clone();
             (meta.port, sec)
@@ -159,15 +163,14 @@ impl BackendManager {
             .expect("valid loopback");
         use std::io::{Read, Write};
         use std::net::TcpStream;
-        use std::time::Duration;
-        let mut stream = TcpStream::connect_timeout(&address, Duration::from_millis(500)).ok()?;
+        let mut stream =
+            TcpStream::connect_timeout(&address, Duration::from_millis(500)).ok()?;
         let request = format!(
             "GET /desktop/diagnostics HTTP/1.1\r\nHost: 127.0.0.1\r\nX-ACEStep-Launch-Secret: {secret}\r\nConnection: close\r\n\r\n"
         );
         stream.write_all(request.as_bytes()).ok()?;
         let mut response = String::new();
         stream.read_to_string(&mut response).ok()?;
-        // Extract JSON body after headers
         let body = response.split("\r\n\r\n").nth(1)?;
         Some(body.to_string())
     }

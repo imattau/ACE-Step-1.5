@@ -14,7 +14,7 @@ use backend::BackendManager;
 use desktop_log::DesktopLog;
 use paths::RuntimePaths;
 use std::sync::Mutex;
-use tauri::{Manager, State};
+use tauri::{Manager, State, WebviewUrl};
 
 struct DesktopState {
     backend: BackendManager,

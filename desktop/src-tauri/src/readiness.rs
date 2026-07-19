@@ -26,7 +26,13 @@ pub fn poll_readiness(
             return;
         }
     }
-    update_status(&app, &status, "failed", "Backend readiness timed out", None);
+    update_status(
+        &app,
+        &status,
+        "failed",
+        "Backend readiness timed out",
+        None,
+    );
 }
 
 pub fn update_status(
@@ -48,7 +54,9 @@ fn probe(port: u16, secret: &str) -> bool {
     let address = format!("127.0.0.1:{port}")
         .parse()
         .expect("valid loopback address");
-    let Ok(mut stream) = TcpStream::connect_timeout(&address, Duration::from_millis(250)) else {
+    let Ok(mut stream) =
+        TcpStream::connect_timeout(&address, Duration::from_millis(250))
+    else {
         return false;
     };
     let request = format!(
