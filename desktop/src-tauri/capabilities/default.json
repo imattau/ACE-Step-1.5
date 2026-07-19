@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main-capability",
-  "description": "Minimal IPC access for the local startup screen",
+  "description": "Minimal IPC access for the local startup screen. Custom commands (retry_backend, backend_status, install_models, etc.) are registered in the Rust invoke handler and do not require separate capability entries. No shell, filesystem, or window-management plugin permissions are granted.",
   "windows": ["main"],
   "permissions": ["core:default"]
 }

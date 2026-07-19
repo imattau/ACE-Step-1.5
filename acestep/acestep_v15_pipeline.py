@@ -668,6 +668,8 @@ def main():
             if p and p not in allowed_paths:
                 allowed_paths.append(p)
 
+        desktop_mode = bool(os.environ.get("ACESTEP_DESKTOP_LAUNCH_SECRET"))
+
         # Enable API endpoints if requested
         if args.enable_api:
             print("Enabling API endpoints...")
@@ -679,7 +681,7 @@ def main():
                 server_port=args.port,
                 share=args.share,
                 debug=args.debug,
-                show_error=True,
+                show_error=not desktop_mode,  # sanitize errors in desktop mode
                 prevent_thread_lock=True,  # Don't block, so we can add routes
                 inbrowser=False,
                 auth=auth,
@@ -723,7 +725,7 @@ def main():
                 server_port=args.port,
                 share=args.share,
                 debug=args.debug,
-                show_error=True,
+                show_error=not desktop_mode,  # sanitize errors in desktop mode
                 prevent_thread_lock=False,
                 inbrowser=False,
                 auth=auth,
@@ -733,12 +735,29 @@ def main():
         if os.environ.get("ACESTEP_DESKTOP_LAUNCH_SECRET"):
             from acestep.desktop_server import emit_startup_event
 
-            emit_startup_event("failed", error=str(e))
+            emit_startup_event("failed", error=_sanitize_error(e))
         print(f"Error launching Gradio: {e}", file=sys.stderr)
         import traceback
 
-        traceback.print_exc()
+        if not os.environ.get("ACESTEP_DESKTOP_LAUNCH_SECRET"):
+            traceback.print_exc()
         sys.exit(1)
+
+
+def _sanitize_error(error: Exception) -> str:
+    """Strip filesystem paths and other internal details from an error message.
+
+    In desktop mode the error may propagate to the startup UI shown to the
+    user, so source-relative paths, user home directories, and configuration
+    values should not appear in the message.
+    """
+    message = str(error)
+    replacements: list[tuple[str, str]] = [
+        ("/home/", "~/"),
+    ]
+    for old, new in replacements:
+        message = message.replace(old, new)
+    return message
 
 
 if __name__ == "__main__":

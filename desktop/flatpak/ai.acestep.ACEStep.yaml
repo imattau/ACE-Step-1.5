@@ -9,11 +9,25 @@ sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
 
 finish-args:
+  # --share=network: Required for the Python backend to bind to the loopback
+  # interface and serve the Gradio web UI. Also required for model downloads
+  # from Hugging Face during first-run setup.
   - --share=network
+  # --share=ipc: Required by the WebKit webview and XDG Desktop Portal
+  # communication between the sandbox and the host.
   - --share=ipc
+  # --socket=wayland: Primary display protocol on modern Linux desktops.
   - --socket=wayland
+  # --socket=fallback-x11: X11 fallback when Wayland is unavailable (e.g.,
+  # older NVIDIA driver sessions).
   - --socket=fallback-x11
+  # --socket=pulseaudio: Required by the WebKit/GTK audio stack for
+  # playback. PipeWire provides PulseAudio compatibility.
   - --socket=pulseaudio
+  # --device=dri: Direct Rendering Interface for GPU compute via the
+  # Flatpak NVIDIA driver extension. --device=all was evaluated during the
+  # CUDA feasibility spike but was not required for CUDA access through
+  # the NVIDIA Flatpak extension, which exposes the GPU via /dev/dri/*.
   - --device=dri
 
 build-options:

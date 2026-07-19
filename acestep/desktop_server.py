@@ -6,7 +6,7 @@ import argparse
 import json
 import os
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -55,7 +55,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.checkpoints_dir:
         os.environ["ACESTEP_CHECKPOINTS_DIR"] = args.checkpoints_dir
     log_dir = ensure_directory(get_log_dir())
-    _configure_file_logging(log_dir)
+    _configure_file_logging(log_dir, args.launch_secret)
 
     os.environ["ACESTEP_DESKTOP_LAUNCH_SECRET"] = args.launch_secret
     pipeline_args = [
@@ -101,10 +101,25 @@ def _run_pipeline() -> None:
     pipeline_main()
 
 
-def _configure_file_logging(log_dir: Path) -> None:
-    """Add bounded, rotating desktop backend logs."""
+def _build_secret_filter(launch_secret: str) -> Callable:
+    """Build a loguru filter that discards records containing the launch secret.
+
+    This prevents the per-launch authentication token from appearing in
+    rotating log files if any code path inadvertently logs arguments or
+    environment state.
+    """
+    def _filter(record: dict) -> bool:
+        message = str(record.get("message", ""))
+        return launch_secret not in message
+    return _filter
+
+
+def _configure_file_logging(log_dir: Path, launch_secret: str | None = None) -> None:
+    """Add bounded, rotating desktop backend logs with secret filtering."""
+    filter_fn = _build_secret_filter(launch_secret) if launch_secret else None
     logger.add(
         log_dir / "backend.log",
+        filter=filter_fn,
         rotation="10 MB",
         retention=5,
         enqueue=True,
