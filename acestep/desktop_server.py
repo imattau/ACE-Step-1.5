@@ -137,6 +137,7 @@ def main(argv: list[str] | None = None) -> None:
     ]
     _append_path_argument(pipeline_args, "--output-dir", args.output_dir)
     _append_path_argument(pipeline_args, "--checkpoints-dir", args.checkpoints_dir)
+    pipeline_args.extend(("--config_path", "acestep-v15-turbo"))
     pipeline_args.extend(("--lm_model_path", args.lm_model))
 
     emit_startup_event("launching", host="127.0.0.1", port=args.port)
