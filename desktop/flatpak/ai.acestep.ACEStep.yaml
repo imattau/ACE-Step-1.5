@@ -82,7 +82,7 @@ modules:
     build-commands:
       - npm --prefix desktop install --offline --ignore-scripts
       - npm --prefix desktop run build
-      - cargo build --manifest-path desktop/src-tauri/Cargo.toml --release --offline
+      - cargo build --manifest-path desktop/src-tauri/Cargo.toml --release --offline --features tauri/custom-protocol
       - install -Dm755 desktop/src-tauri/target/release/ace-step-desktop /app/bin/ace-step
       - install -Dm644 desktop/src-tauri/icons/icon.png /app/share/icons/hicolor/512x512/apps/ai.acestep.ACEStep.png
     sources:

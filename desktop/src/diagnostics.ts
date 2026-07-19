@@ -1,17 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
 
-export interface BackendStatus {
-  phase: "starting" | "ready" | "failed" | "stopped";
-  message: string;
-  url?: string;
-  recentOutput: string[];
-}
+import { startupProgress, type BackendStatus } from "./startup_progress";
+
+export type { BackendStatus } from "./startup_progress";
 
 export function renderStatus(status: BackendStatus): void {
   document.querySelector("#phase")!.textContent = status.message;
-  const details = document.querySelector<HTMLPreElement>("#details")!;
-  details.hidden = status.recentOutput.length === 0;
-  details.textContent = status.recentOutput.join("\n");
+  const progress = document.querySelector<HTMLProgressElement>("#progress")!;
+  const progressLabel = document.querySelector<HTMLSpanElement>("#progress-label")!;
+  const progressGroup = document.querySelector<HTMLElement>("#startup-progress")!;
+  const value = startupProgress(status);
+  progress.value = value;
+  progressLabel.textContent = `${value}%`;
+  progressGroup.hidden = status.phase === "failed";
 }
 
 export async function fetchDiagnostics(): Promise<string> {

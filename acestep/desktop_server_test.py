@@ -22,6 +22,8 @@ class DesktopServerTests(unittest.TestCase):
             captured.extend(sys.argv)
             captured_environment["secret"] = os.environ.get("ACESTEP_DESKTOP_LAUNCH_SECRET")
             captured_environment["output"] = os.environ.get("ACESTEP_OUTPUT_DIR")
+            captured_environment["lm_backend"] = os.environ.get("ACESTEP_LM_BACKEND")
+            captured_environment["service_backend"] = os.environ.get("SERVICE_MODE_BACKEND")
 
         with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
             os.environ,
@@ -48,6 +50,8 @@ class DesktopServerTests(unittest.TestCase):
         self.assertEqual("true", captured[captured.index("--service_mode") + 1])
         self.assertNotIn("--share", captured)
         self.assertEqual("launch-token", captured_environment["secret"])
+        self.assertEqual("pt", captured_environment["lm_backend"])
+        self.assertEqual("pt", captured_environment["service_backend"])
         self.assertTrue(str(captured_environment["output"]).endswith("outputs"))
 
     def test_main_rejects_empty_secret(self) -> None:

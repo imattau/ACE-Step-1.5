@@ -121,6 +121,11 @@ def main(argv: list[str] | None = None) -> None:
     _configure_file_logging(log_dir, args.launch_secret)
 
     os.environ["ACESTEP_DESKTOP_LAUNCH_SECRET"] = args.launch_secret
+    # The production Flatpak does not ship a C compiler. The vLLM path asks
+    # Triton to compile a CUDA helper at runtime, delaying startup before it
+    # eventually falls back to the compiler-free PyTorch implementation.
+    os.environ["ACESTEP_LM_BACKEND"] = "pt"
+    os.environ["SERVICE_MODE_BACKEND"] = "pt"
     pipeline_args = [
         "acestep-desktop",
         "--server-name",
