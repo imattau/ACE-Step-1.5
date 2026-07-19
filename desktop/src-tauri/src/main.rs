@@ -113,6 +113,12 @@ fn main() {
                 .ok_or("missing main window configuration")?;
             tauri::WebviewWindowBuilder::from_config(app, window_config)?
                 .on_download(|_, event| downloads::handle_download(event))
+                .on_navigation(|url| {
+                    url.scheme() == "tauri"
+                        || url.scheme() == "https" && url.host_str() == Some("tauri.localhost")
+                        || url.scheme() == "http" && url.host_str() == Some("127.0.0.1")
+                        || url.scheme() == "http" && url.host_str() == Some("localhost")
+                })
                 .build()?;
             let state = app.state::<DesktopState>();
             state.log.write("window created");
